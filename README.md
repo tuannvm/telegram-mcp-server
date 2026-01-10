@@ -55,6 +55,8 @@ Send telegram status to check configuration
 |------|-------------|
 | `send_telegram` | Send Telegram notifications with HTML formatting |
 | `telegram_status` | Check if Telegram credentials are configured |
+| `send_and_wait` | Send message and optionally poll for replies with progress notifications |
+| `check_replies` | Check for pending replies from Telegram (non-blocking) |
 
 ## Examples
 
@@ -87,6 +89,16 @@ Duration: 45s"
 **Status check:**
 ```
 Send telegram status to verify configuration
+```
+
+**Send and wait for reply:**
+```
+Use send_and_wait to send "Deploy to production?" with waitForReply=true and timeout=300
+```
+
+**Check for replies:**
+```
+Use check_replies to see if user responded to pending messages
 ```
 
 ## Getting Your Chat ID
@@ -135,6 +147,42 @@ This works reliably across:
 - Remote SSH sessions
 - Containerized environments
 - CI/CD pipelines
+
+## Bidirectional Communication
+
+The server supports polling-based bidirectional communication with Telegram:
+
+1. **send_and_wait**: Send a message and poll for replies using file-based state storage
+2. **check_replies**: Check for pending replies stored by an external webhook handler
+
+### State Storage
+
+Replies are stored in `~/.telegram-mcp-replies/` as JSON files:
+```json
+{
+  "messageId": 123,
+  "chatId": "123456",
+  "replyText": "User's reply",
+  "timestamp": 1234567890,
+  "status": "pending"
+}
+```
+
+Sent message metadata is tracked in `~/.telegram-mcp-sent/messages.json`:
+```json
+{
+  "123": {
+    "chatId": "123456",
+    "timestamp": 1234567890,
+    "message": "Original message",
+    "status": "replied"
+  }
+}
+```
+
+### Webhook Handler
+
+To receive replies from Telegram, you need to set up a webhook handler. See [docs/webhook-example.md](docs/webhook-example.md) for a complete example.
 
 ## License
 

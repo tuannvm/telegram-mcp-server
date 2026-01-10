@@ -45,4 +45,60 @@ export const toolDefinitions: ToolDefinition[] = [
       openWorldHint: false,
     },
   },
+  {
+    name: TOOLS.SEND_AND_WAIT,
+    description:
+      'Send a Telegram message and optionally wait for a reply with polling. Use for interactive workflows requiring user input.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          description: 'The message to send to Telegram',
+        },
+        waitForReply: {
+          type: 'boolean',
+          description: 'Whether to poll for replies (default: false)',
+        },
+        timeout: {
+          type: 'number',
+          description: 'Maximum seconds to wait for reply (default: 300)',
+        },
+        pollInterval: {
+          type: 'number',
+          description: 'Seconds between polls (default: 5)',
+        },
+      },
+      required: ['message'],
+    },
+    annotations: {
+      title: 'Send and Wait',
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
+  },
+  {
+    name: TOOLS.CHECK_REPLIES,
+    description:
+      'Check for pending replies from Telegram (non-blocking). Returns all pending replies or a specific message reply.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        messageId: {
+          type: 'number',
+          description: 'Specific message ID to check, or return all pending',
+        },
+      },
+      required: [],
+    },
+    annotations: {
+      title: 'Check Replies',
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
 ];

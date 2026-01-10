@@ -9,6 +9,8 @@ import {
 } from '../types.js';
 import { ToolExecutionError, ValidationError } from '../errors.js';
 import { ZodError } from 'zod';
+import { SendAndWaitToolHandler } from './send-and-wait.js';
+import { CheckRepliesToolHandler } from './check-replies.js';
 
 // Default no-op context for handlers that don't need progress
 const defaultContext: ToolHandlerContext = {
@@ -201,4 +203,6 @@ export class TelegramStatusToolHandler {
 export const toolHandlers = {
   [TOOLS.SEND_TELEGRAM]: new SendTelegramToolHandler(),
   [TOOLS.TELEGRAM_STATUS]: new TelegramStatusToolHandler(),
+  [TOOLS.SEND_AND_WAIT]: new SendAndWaitToolHandler(),
+  [TOOLS.CHECK_REPLIES]: new CheckRepliesToolHandler(),
 } as const;

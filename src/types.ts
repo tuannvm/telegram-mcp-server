@@ -4,6 +4,8 @@ import { z } from 'zod';
 export const TOOLS = {
   SEND_TELEGRAM: 'send_telegram',
   TELEGRAM_STATUS: 'telegram_status',
+  SEND_AND_WAIT: 'send_and_wait',
+  CHECK_REPLIES: 'check_replies',
 } as const;
 
 export type ToolName = typeof TOOLS[keyof typeof TOOLS];
@@ -80,3 +82,17 @@ export const TelegramStatusToolSchema = z.object({});
 
 export type SendTelegramToolArgs = z.infer<typeof SendTelegramToolSchema>;
 export type TelegramStatusToolArgs = z.infer<typeof TelegramStatusToolSchema>;
+
+export const SendAndWaitToolSchema = z.object({
+  message: z.string().describe('The message to send to Telegram'),
+  waitForReply: z.boolean().optional().default(false).describe('Whether to poll for replies'),
+  timeout: z.number().optional().default(300).describe('Maximum seconds to wait for reply'),
+  pollInterval: z.number().optional().default(5).describe('Seconds between polls'),
+});
+
+export const CheckRepliesToolSchema = z.object({
+  messageId: z.number().optional().describe('Specific message ID to check, or return all pending'),
+});
+
+export type SendAndWaitToolArgs = z.infer<typeof SendAndWaitToolSchema>;
+export type CheckRepliesToolArgs = z.infer<typeof CheckRepliesToolSchema>;
