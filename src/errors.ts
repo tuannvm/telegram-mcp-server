@@ -19,6 +19,20 @@ export class ValidationError extends Error {
   }
 }
 
+export class ConfigurationError extends Error {
+  constructor(message: string) {
+    super(`Configuration error: ${message}`);
+    this.name = 'ConfigurationError';
+  }
+}
+
+export class NetworkError extends Error {
+  constructor(message: string, public readonly cause?: unknown) {
+    super(`Network error: ${message}`);
+    this.name = 'NetworkError';
+  }
+}
+
 export function handleError(error: unknown, context: string): string {
   if (error instanceof Error) {
     return `Error in ${context}: ${error.message}`;

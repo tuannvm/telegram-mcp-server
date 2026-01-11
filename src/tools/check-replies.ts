@@ -20,12 +20,13 @@ export class CheckRepliesToolHandler {
         const updates = await getUpdates();
 
         for (const update of updates) {
-          if (update.message?.reply_to_message?.message_id === messageId) {
+          const msg = update.message;
+          if (msg?.reply_to_message?.message_id === messageId) {
             return {
               content: [
                 {
                   type: 'text',
-                  text: `Reply for message ${messageId}:\n\n${update.message.text}\n\nTimestamp: ${new Date(update.message.date * 1000).toISOString()}`,
+                  text: `Reply for message ${messageId}:\n\n${msg.text}\n\nTimestamp: ${new Date(msg.date * 1000).toISOString()}`,
                 },
               ],
             };
@@ -77,7 +78,7 @@ export class CheckRepliesToolHandler {
       throw new ToolExecutionError(
         TOOLS.CHECK_REPLIES,
         'Failed to check replies',
-        error
+        error instanceof Error ? error : new Error(String(error))
       );
     }
   }
