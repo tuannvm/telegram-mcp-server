@@ -150,39 +150,34 @@ This works reliably across:
 
 ## Bidirectional Communication
 
-The server supports polling-based bidirectional communication with Telegram:
+The server supports polling-based bidirectional communication with Telegram using the getUpdates API:
 
-1. **send_and_wait**: Send a message and poll for replies using file-based state storage
-2. **check_replies**: Check for pending replies stored by an external webhook handler
+1. **send_and_wait**: Send a message and poll for replies with progress notifications
+2. **check_replies**: Check for pending replies from Telegram (non-blocking)
 
 ### State Storage
 
-Replies are stored in `~/.telegram-mcp-replies/` as JSON files:
+The server uses file-based offset tracking for Telegram's getUpdates API:
+
+**Location:** `~/.telegram-mcp-state/offset.json`
+
+**Format:**
 ```json
 {
-  "messageId": 123,
-  "chatId": "123456",
-  "replyText": "User's reply",
-  "timestamp": 1234567890,
-  "status": "pending"
+  "offset": 123456
 }
 ```
 
-Sent message metadata is tracked in `~/.telegram-mcp-sent/messages.json`:
-```json
-{
-  "123": {
-    "chatId": "123456",
-    "timestamp": 1234567890,
-    "message": "Original message",
-    "status": "replied"
-  }
-}
-```
+This stores the last processed `update_id + 1` to ensure no duplicate message processing across server restarts.
 
-### Webhook Handler
+### How Polling Works
 
-To receive replies from Telegram, you need to set up a webhook handler. See [docs/webhook-example.md](docs/webhook-example.md) for a complete example.
+1. Server calls `getUpdates` API with the stored offset
+2. Telegram returns all new messages/updates since that offset
+3. Server updates the offset after processing each batch
+4. For `send_and_wait`, the server polls continuously until a reply is received or timeout occurs
+
+No external webhook is required - the server polls directly from Telegram.
 
 ## License
 

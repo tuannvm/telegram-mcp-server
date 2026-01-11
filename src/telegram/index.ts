@@ -2,6 +2,14 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 
+import {
+  DEFAULT_POLL_TIMEOUT_SECONDS,
+  DEFAULT_REQUEST_TIMEOUT_MS,
+  MAX_POLL_TIMEOUT_SECONDS,
+  MS_PER_SECOND,
+} from '../constants.js';
+import { ConfigurationError } from '../errors.js';
+
 const STATE_DIR = join(homedir(), '.telegram-mcp-state');
 const OFFSET_FILE = join(STATE_DIR, 'offset.json');
 
@@ -34,7 +42,9 @@ function getBotConfig(): { botToken: string; chatId: string } {
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (!botToken || !chatId) {
-    throw new Error('Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID');
+    throw new ConfigurationError(
+      'Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID environment variable'
+    );
   }
 
   return { botToken, chatId };
@@ -59,7 +69,7 @@ export async function sendMessage(message: string): Promise<SendMessageResult> {
   const { botToken, chatId } = getBotConfig();
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  const timeoutId = setTimeout(() => controller.abort(), DEFAULT_REQUEST_TIMEOUT_MS);
 
   try {
     const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -90,7 +100,8 @@ export async function sendMessage(message: string): Promise<SendMessageResult> {
     clearTimeout(timeoutId);
 
     if (error instanceof Error && error.name === 'AbortError') {
-      return { success: false, error: 'Request timeout (10s)' };
+      const timeoutSeconds = DEFAULT_REQUEST_TIMEOUT_MS / MS_PER_SECOND;
+      return { success: false, error: `Request timeout (${timeoutSeconds}s)` };
     }
 
     return { success: false, error: error instanceof Error ? error.message : 'Network error' };
@@ -99,7 +110,7 @@ export async function sendMessage(message: string): Promise<SendMessageResult> {
 
 export async function getUpdates(options: { timeout?: number; offset?: number } = {}): Promise<TelegramUpdate[]> {
   const { botToken } = getBotConfig();
-  const { timeout = 10, offset } = options;
+  const { timeout = DEFAULT_POLL_TIMEOUT_SECONDS, offset } = options;
 
   const actualOffset = offset ?? (await getOffset());
 
@@ -142,7 +153,9 @@ export async function waitForReply(
       await onProgress(`Waiting for reply... (${elapsed}s / ${total}s)`, elapsed, total);
     }
 
-    const updates = await getUpdates({ timeout: Math.min(pollIntervalMs / 1000, 10) });
+    const updates = await getUpdates({
+      timeout: Math.min(pollIntervalMs / MS_PER_SECOND, MAX_POLL_TIMEOUT_SECONDS),
+    });
 
     for (const update of updates) {
       if (update.message?.reply_to_message?.message_id === sentMessageId) {

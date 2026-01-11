@@ -90,7 +90,7 @@ export class SendAndWaitToolHandler {
       throw new ToolExecutionError(
         TOOLS.SEND_AND_WAIT,
         'Failed to send message and wait for reply',
-        error
+        error instanceof Error ? error : new Error(String(error))
       );
     }
   }

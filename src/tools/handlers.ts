@@ -11,6 +11,10 @@ import { ToolExecutionError, ValidationError } from '../errors.js';
 import { ZodError } from 'zod';
 import { SendAndWaitToolHandler } from './send-and-wait.js';
 import { CheckRepliesToolHandler } from './check-replies.js';
+import {
+  DEFAULT_REQUEST_TIMEOUT_MS,
+  MAX_ERROR_PREVIEW_LENGTH,
+} from '../constants.js';
 
 // Default no-op context for handlers that don't need progress
 const defaultContext: ToolHandlerContext = {
@@ -65,7 +69,10 @@ async function sendTelegramMessage(
 
   // Setup timeout for fetch request
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    DEFAULT_REQUEST_TIMEOUT_MS
+  );
 
   try {
     const response = await fetch(
@@ -100,7 +107,7 @@ async function sendTelegramMessage(
       const text = await response.text();
       return {
         success: false,
-        error: `Unexpected response type: ${contentType || 'unknown'}. Response: ${text.slice(0, 200)}`,
+        error: `Unexpected response type: ${contentType || 'unknown'}. Response: ${text.slice(0, MAX_ERROR_PREVIEW_LENGTH)}`,
       };
     }
 
@@ -117,9 +124,10 @@ async function sendTelegramMessage(
 
     // Handle timeout specifically
     if (error instanceof Error && error.name === 'AbortError') {
+      const timeoutSeconds = DEFAULT_REQUEST_TIMEOUT_MS / 1000;
       return {
         success: false,
-        error: 'Request timeout (10s)',
+        error: `Request timeout (${timeoutSeconds}s)`,
       };
     }
 
@@ -159,7 +167,7 @@ export class SendTelegramToolHandler {
       throw new ToolExecutionError(
         TOOLS.SEND_TELEGRAM,
         'Failed to send Telegram message',
-        error
+        error instanceof Error ? error : new Error(String(error))
       );
     }
   }
@@ -193,7 +201,7 @@ export class TelegramStatusToolHandler {
       throw new ToolExecutionError(
         TOOLS.TELEGRAM_STATUS,
         'Failed to check Telegram status',
-        error
+        error instanceof Error ? error : new Error(String(error))
       );
     }
   }
