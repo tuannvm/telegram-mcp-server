@@ -155,6 +155,12 @@ The server supports polling-based bidirectional communication with Telegram usin
 1. **send_and_wait**: Send a message and poll for replies with progress notifications
 2. **check_replies**: Check for pending replies from Telegram (non-blocking)
 
+### Documentation
+
+- **[Bidirectional Communication Guide](docs/bidirectional-communication.md)** - How to use send_and_wait and check_replies
+- **[Technical Architecture](docs/architecture.md)** - Implementation details and system design
+- **[Usage Examples](docs/usage-examples.md)** - Practical workflows and examples
+
 ### State Storage
 
 The server uses file-based offset tracking for Telegram's getUpdates API:

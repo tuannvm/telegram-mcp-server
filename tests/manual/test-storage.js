@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import { getAllPendingReplies } from './dist/storage/index.js';
+// Note: The storage module has been deprecated and removed.
+// The server now uses getUpdates polling instead.
+// This test is no longer functional - use test-polling.js instead.
 
-console.log('Testing storage module...');
-const replies = await getAllPendingReplies();
-console.log(`Found ${replies.length} pending replies:`);
-for (const reply of replies) {
-  console.log(`- Message ${reply.messageId}: "${reply.replyText}"`);
-}
+console.error('The storage module has been removed.');
+console.error('The server now uses Telegram getUpdates API for polling.');
+console.error('Use test-polling.js or test-bidirectional.js instead.');
+process.exit(1);
