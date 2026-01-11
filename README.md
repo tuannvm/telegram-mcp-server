@@ -55,6 +55,8 @@ Send telegram status to check configuration
 |------|-------------|
 | `send_telegram` | Send Telegram notifications with HTML formatting |
 | `telegram_status` | Check if Telegram credentials are configured |
+| `send_and_wait` | Send message and optionally poll for replies with progress notifications |
+| `check_replies` | Check for pending replies from Telegram (non-blocking) |
 
 ## Examples
 
@@ -87,6 +89,16 @@ Duration: 45s"
 **Status check:**
 ```
 Send telegram status to verify configuration
+```
+
+**Send and wait for reply:**
+```
+Use send_and_wait to send "Deploy to production?" with waitForReply=true and timeout=300
+```
+
+**Check for replies:**
+```
+Use check_replies to see if user responded to pending messages
 ```
 
 ## Getting Your Chat ID
@@ -135,6 +147,43 @@ This works reliably across:
 - Remote SSH sessions
 - Containerized environments
 - CI/CD pipelines
+
+## Bidirectional Communication
+
+The server supports polling-based bidirectional communication with Telegram using the getUpdates API:
+
+1. **send_and_wait**: Send a message and poll for replies with progress notifications
+2. **check_replies**: Check for pending replies from Telegram (non-blocking)
+
+### Documentation
+
+- **[Bidirectional Communication Guide](docs/bidirectional-communication.md)** - How to use send_and_wait and check_replies
+- **[Technical Architecture](docs/architecture.md)** - Implementation details and system design
+- **[Usage Examples](docs/usage-examples.md)** - Practical workflows and examples
+
+### State Storage
+
+The server uses file-based offset tracking for Telegram's getUpdates API:
+
+**Location:** `~/.telegram-mcp-state/offset.json`
+
+**Format:**
+```json
+{
+  "offset": 123456
+}
+```
+
+This stores the last processed `update_id + 1` to ensure no duplicate message processing across server restarts.
+
+### How Polling Works
+
+1. Server calls `getUpdates` API with the stored offset
+2. Telegram returns all new messages/updates since that offset
+3. Server updates the offset after processing each batch
+4. For `send_and_wait`, the server polls continuously until a reply is received or timeout occurs
+
+No external webhook is required - the server polls directly from Telegram.
 
 ## License
 

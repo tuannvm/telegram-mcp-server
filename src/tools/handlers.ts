@@ -9,6 +9,12 @@ import {
 } from '../types.js';
 import { ToolExecutionError, ValidationError } from '../errors.js';
 import { ZodError } from 'zod';
+import { SendAndWaitToolHandler } from './send-and-wait.js';
+import { CheckRepliesToolHandler } from './check-replies.js';
+import {
+  DEFAULT_REQUEST_TIMEOUT_MS,
+  MAX_ERROR_PREVIEW_LENGTH,
+} from '../constants.js';
 
 // Default no-op context for handlers that don't need progress
 const defaultContext: ToolHandlerContext = {
@@ -28,7 +34,7 @@ function escapeHtml(text: string): string {
 }
 
 /**
- * Get Telegram configuration at runtime
+ * Get Telegram configuration from environment variables
  */
 function getTelegramConfig(): {
   botToken: string | undefined;
@@ -40,6 +46,9 @@ function getTelegramConfig(): {
   };
 }
 
+/**
+ * Send a Telegram message with HTML formatting
+ */
 async function sendTelegramMessage(
   header: string,
   body?: string
@@ -63,7 +72,10 @@ async function sendTelegramMessage(
 
   // Setup timeout for fetch request
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    DEFAULT_REQUEST_TIMEOUT_MS
+  );
 
   try {
     const response = await fetch(
@@ -98,7 +110,7 @@ async function sendTelegramMessage(
       const text = await response.text();
       return {
         success: false,
-        error: `Unexpected response type: ${contentType || 'unknown'}. Response: ${text.slice(0, 200)}`,
+        error: `Unexpected response type: ${contentType || 'unknown'}. Response: ${text.slice(0, MAX_ERROR_PREVIEW_LENGTH)}`,
       };
     }
 
@@ -115,9 +127,10 @@ async function sendTelegramMessage(
 
     // Handle timeout specifically
     if (error instanceof Error && error.name === 'AbortError') {
+      const timeoutSeconds = DEFAULT_REQUEST_TIMEOUT_MS / 1000;
       return {
         success: false,
-        error: 'Request timeout (10s)',
+        error: `Request timeout (${timeoutSeconds}s)`,
       };
     }
 
@@ -128,6 +141,9 @@ async function sendTelegramMessage(
   }
 }
 
+/**
+ * Handler for send_telegram tool
+ */
 export class SendTelegramToolHandler {
   async execute(
     args: unknown,
@@ -157,12 +173,15 @@ export class SendTelegramToolHandler {
       throw new ToolExecutionError(
         TOOLS.SEND_TELEGRAM,
         'Failed to send Telegram message',
-        error
+        error instanceof Error ? error : new Error(String(error))
       );
     }
   }
 }
 
+/**
+ * Handler for telegram_status tool
+ */
 export class TelegramStatusToolHandler {
   async execute(
     args: unknown,
@@ -191,14 +210,18 @@ export class TelegramStatusToolHandler {
       throw new ToolExecutionError(
         TOOLS.TELEGRAM_STATUS,
         'Failed to check Telegram status',
-        error
+        error instanceof Error ? error : new Error(String(error))
       );
     }
   }
 }
 
-// Tool handler registry
+/**
+ * Registry of all tool handlers
+ */
 export const toolHandlers = {
   [TOOLS.SEND_TELEGRAM]: new SendTelegramToolHandler(),
   [TOOLS.TELEGRAM_STATUS]: new TelegramStatusToolHandler(),
+  [TOOLS.SEND_AND_WAIT]: new SendAndWaitToolHandler(),
+  [TOOLS.CHECK_REPLIES]: new CheckRepliesToolHandler(),
 } as const;
