@@ -1,5 +1,8 @@
 import { TOOLS, type ToolDefinition } from '../types.js';
 
+/**
+ * Tool definitions for MCP server
+ */
 export const toolDefinitions: ToolDefinition[] = [
   {
     name: TOOLS.SEND_TELEGRAM,

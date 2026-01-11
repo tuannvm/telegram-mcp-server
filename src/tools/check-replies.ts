@@ -8,6 +8,9 @@ import { ToolExecutionError, ValidationError } from '../errors.js';
 import { ZodError } from 'zod';
 import { getAllReplies, getUpdates } from '../telegram/index.js';
 
+/**
+ * Handler for check_replies tool - check for pending replies from Telegram
+ */
 export class CheckRepliesToolHandler {
   async execute(
     args: unknown,

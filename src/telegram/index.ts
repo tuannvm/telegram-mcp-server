@@ -13,6 +13,9 @@ import { ConfigurationError } from '../errors.js';
 const STATE_DIR = join(homedir(), '.telegram-mcp-state');
 const OFFSET_FILE = join(STATE_DIR, 'offset.json');
 
+/**
+ * Telegram message data structure from Bot API
+ */
 export interface TelegramMessage {
   message_id: number;
   from: { id: number; first_name?: string; username?: string };
@@ -26,17 +29,26 @@ export interface TelegramMessage {
   };
 }
 
+/**
+ * Telegram update data structure from getUpdates API
+ */
 export interface TelegramUpdate {
   update_id: number;
   message?: TelegramMessage;
 }
 
+/**
+ * Result of sending a message to Telegram
+ */
 export interface SendMessageResult {
   success: boolean;
   messageId?: number;
   error?: string;
 }
 
+/**
+ * Get bot token and chat ID from environment variables
+ */
 function getBotConfig(): { botToken: string; chatId: string } {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -50,6 +62,9 @@ function getBotConfig(): { botToken: string; chatId: string } {
   return { botToken, chatId };
 }
 
+/**
+ * Read the last processed update offset from state file
+ */
 async function getOffset(): Promise<number> {
   try {
     const content = await fs.readFile(OFFSET_FILE, 'utf-8');
@@ -60,11 +75,17 @@ async function getOffset(): Promise<number> {
   }
 }
 
+/**
+ * Save the last processed update offset to state file
+ */
 async function setOffset(offset: number): Promise<void> {
   await fs.mkdir(STATE_DIR, { recursive: true });
   await fs.writeFile(OFFSET_FILE, JSON.stringify({ offset }, null, 2));
 }
 
+/**
+ * Send a message to Telegram via Bot API
+ */
 export async function sendMessage(message: string): Promise<SendMessageResult> {
   const { botToken, chatId } = getBotConfig();
 
@@ -121,6 +142,9 @@ export async function sendMessage(message: string): Promise<SendMessageResult> {
   }
 }
 
+/**
+ * Poll for updates from Telegram using long polling
+ */
 export async function getUpdates(
   options: { timeout?: number; offset?: number } = {}
 ): Promise<TelegramUpdate[]> {
@@ -157,6 +181,9 @@ export async function getUpdates(
   }
 }
 
+/**
+ * Poll for a reply to a specific message with timeout
+ */
 export async function waitForReply(
   sentMessageId: number,
   timeoutMs: number,
@@ -202,6 +229,9 @@ export async function waitForReply(
   return { found: false };
 }
 
+/**
+ * Get all pending replies from the latest updates
+ */
 export async function getAllReplies(): Promise<
   Array<{ messageId: number; replyText: string; timestamp: number }>
 > {
@@ -225,6 +255,9 @@ export async function getAllReplies(): Promise<
   return replies;
 }
 
+/**
+ * Sleep for specified milliseconds
+ */
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

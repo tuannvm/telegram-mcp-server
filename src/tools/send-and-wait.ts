@@ -11,6 +11,9 @@ import {
   waitForReply as waitForTelegramReply,
 } from '../telegram/index.js';
 
+/**
+ * Handler for send_and_wait tool - send message and optionally poll for replies
+ */
 export class SendAndWaitToolHandler {
   async execute(
     args: unknown,

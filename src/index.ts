@@ -15,6 +15,9 @@ const SERVER_CONFIG = {
   version: '1.0.0',
 } as const;
 
+/**
+ * Entry point for the Telegram MCP server
+ */
 async function main(): Promise<void> {
   try {
     const server = new TelegramMcpServer(SERVER_CONFIG);

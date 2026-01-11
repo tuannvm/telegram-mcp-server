@@ -34,7 +34,7 @@ function escapeHtml(text: string): string {
 }
 
 /**
- * Get Telegram configuration at runtime
+ * Get Telegram configuration from environment variables
  */
 function getTelegramConfig(): {
   botToken: string | undefined;
@@ -46,6 +46,9 @@ function getTelegramConfig(): {
   };
 }
 
+/**
+ * Send a Telegram message with HTML formatting
+ */
 async function sendTelegramMessage(
   header: string,
   body?: string
@@ -138,6 +141,9 @@ async function sendTelegramMessage(
   }
 }
 
+/**
+ * Handler for send_telegram tool
+ */
 export class SendTelegramToolHandler {
   async execute(
     args: unknown,
@@ -173,6 +179,9 @@ export class SendTelegramToolHandler {
   }
 }
 
+/**
+ * Handler for telegram_status tool
+ */
 export class TelegramStatusToolHandler {
   async execute(
     args: unknown,
@@ -207,7 +216,9 @@ export class TelegramStatusToolHandler {
   }
 }
 
-// Tool handler registry
+/**
+ * Registry of all tool handlers
+ */
 export const toolHandlers = {
   [TOOLS.SEND_TELEGRAM]: new SendTelegramToolHandler(),
   [TOOLS.TELEGRAM_STATUS]: new TelegramStatusToolHandler(),

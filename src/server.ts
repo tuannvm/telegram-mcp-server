@@ -17,10 +17,16 @@ import { handleError } from './errors.js';
 import { toolDefinitions } from './tools/definitions.js';
 import { toolHandlers } from './tools/handlers.js';
 
+/**
+ * Telegram MCP Server - Implements Model Context Protocol for Telegram notifications
+ */
 export class TelegramMcpServer {
   private readonly server: Server;
   private readonly config: ServerConfig;
 
+  /**
+   * @param config - Server configuration with name and version
+   */
   constructor(config: ServerConfig) {
     this.config = config;
     this.server = new Server(
@@ -38,6 +44,9 @@ export class TelegramMcpServer {
     this.setupHandlers();
   }
 
+  /**
+   * Set up MCP request handlers for listing and calling tools
+   */
   private setupHandlers(): void {
     // List tools handler
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -98,10 +107,16 @@ export class TelegramMcpServer {
     });
   }
 
+  /**
+   * Type guard to check if a string is a valid tool name
+   */
   private isValidToolName(name: string): name is ToolName {
     return Object.values(TOOLS).includes(name as ToolName);
   }
 
+  /**
+   * Start the MCP server with stdio transport
+   */
   async start(): Promise<void> {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
