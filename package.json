@@ -1,6 +1,6 @@
 {
   "name": "@tuannvm/telegram-mcp-server",
-  "version": "0.1.0",
+  "version": "0.0.2",
   "description": "MCP server for Telegram notifications - send notifications from Claude Code to Telegram",
   "main": "dist/index.js",
   "bin": {
