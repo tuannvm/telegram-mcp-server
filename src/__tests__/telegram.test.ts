@@ -1,5 +1,6 @@
 import { SendAndWaitToolHandler } from '../tools/send-and-wait.js';
 import { CheckRepliesToolHandler } from '../tools/check-replies.js';
+import { type ToolHandlerContext } from '../types.js';
 
 // Mock the telegram module
 jest.mock('../telegram/index.js', () => ({
@@ -11,15 +12,23 @@ jest.mock('../telegram/index.js', () => ({
 
 import * as telegram from '../telegram/index.js';
 
-const mockSendMessage = telegram.sendMessage as jest.MockedFunction<typeof telegram.sendMessage>;
-const mockGetUpdates = telegram.getUpdates as jest.MockedFunction<typeof telegram.getUpdates>;
-const mockWaitForReply = telegram.waitForReply as jest.MockedFunction<typeof telegram.waitForReply>;
-const mockGetAllReplies = telegram.getAllReplies as jest.MockedFunction<typeof telegram.getAllReplies>;
+const mockSendMessage = telegram.sendMessage as jest.MockedFunction<
+  typeof telegram.sendMessage
+>;
+const mockGetUpdates = telegram.getUpdates as jest.MockedFunction<
+  typeof telegram.getUpdates
+>;
+const mockWaitForReply = telegram.waitForReply as jest.MockedFunction<
+  typeof telegram.waitForReply
+>;
+const mockGetAllReplies = telegram.getAllReplies as jest.MockedFunction<
+  typeof telegram.getAllReplies
+>;
 
 describe('Telegram API Integration', () => {
   describe('send_and_wait tool', () => {
     let handler: SendAndWaitToolHandler;
-    let mockContext: any;
+    let mockContext: ToolHandlerContext;
 
     beforeEach(() => {
       handler = new SendAndWaitToolHandler();
@@ -59,7 +68,12 @@ describe('Telegram API Integration', () => {
       });
 
       const result = await handler.execute(
-        { message: 'Test message', waitForReply: true, timeout: 30, pollInterval: 5 },
+        {
+          message: 'Test message',
+          waitForReply: true,
+          timeout: 30,
+          pollInterval: 5,
+        },
         mockContext
       );
 
@@ -73,7 +87,12 @@ describe('Telegram API Integration', () => {
       });
 
       const result = await handler.execute(
-        { message: 'Test message', waitForReply: true, timeout: 10, pollInterval: 2 },
+        {
+          message: 'Test message',
+          waitForReply: true,
+          timeout: 10,
+          pollInterval: 2,
+        },
         mockContext
       );
 
@@ -97,7 +116,7 @@ describe('Telegram API Integration', () => {
 
   describe('check_replies tool', () => {
     let handler: CheckRepliesToolHandler;
-    let mockContext: any;
+    let mockContext: ToolHandlerContext;
 
     beforeEach(() => {
       handler = new CheckRepliesToolHandler();

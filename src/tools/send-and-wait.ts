@@ -6,7 +6,10 @@ import {
 } from '../types.js';
 import { ToolExecutionError, ValidationError } from '../errors.js';
 import { ZodError } from 'zod';
-import { sendMessage, waitForReply as waitForTelegramReply } from '../telegram/index.js';
+import {
+  sendMessage,
+  waitForReply as waitForTelegramReply,
+} from '../telegram/index.js';
 
 export class SendAndWaitToolHandler {
   async execute(

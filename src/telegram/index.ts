@@ -69,19 +69,25 @@ export async function sendMessage(message: string): Promise<SendMessageResult> {
   const { botToken, chatId } = getBotConfig();
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), DEFAULT_REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    DEFAULT_REQUEST_TIMEOUT_MS
+  );
 
   try {
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        parse_mode: 'HTML',
-      }),
-      signal: controller.signal,
-    });
+    const response = await fetch(
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: 'HTML',
+        }),
+        signal: controller.signal,
+      }
+    );
 
     clearTimeout(timeoutId);
 
@@ -89,7 +95,11 @@ export async function sendMessage(message: string): Promise<SendMessageResult> {
       return { success: false, error: `HTTP ${response.status}` };
     }
 
-    const data = await response.json() as { ok: boolean; description?: string; result?: { message_id: number } };
+    const data = (await response.json()) as {
+      ok: boolean;
+      description?: string;
+      result?: { message_id: number };
+    };
 
     if (data.ok) {
       return { success: true, messageId: data.result?.message_id };
@@ -104,27 +114,37 @@ export async function sendMessage(message: string): Promise<SendMessageResult> {
       return { success: false, error: `Request timeout (${timeoutSeconds}s)` };
     }
 
-    return { success: false, error: error instanceof Error ? error.message : 'Network error' };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Network error',
+    };
   }
 }
 
-export async function getUpdates(options: { timeout?: number; offset?: number } = {}): Promise<TelegramUpdate[]> {
+export async function getUpdates(
+  options: { timeout?: number; offset?: number } = {}
+): Promise<TelegramUpdate[]> {
   const { botToken } = getBotConfig();
   const { timeout = DEFAULT_POLL_TIMEOUT_SECONDS, offset } = options;
 
   const actualOffset = offset ?? (await getOffset());
 
   try {
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${actualOffset}&timeout=${timeout}`);
+    const response = await fetch(
+      `https://api.telegram.org/bot${botToken}/getUpdates?offset=${actualOffset}&timeout=${timeout}`
+    );
 
     if (!response.ok) {
       return [];
     }
 
-    const data = await response.json() as { ok: boolean; result?: TelegramUpdate[] };
+    const data = (await response.json()) as {
+      ok: boolean;
+      result?: TelegramUpdate[];
+    };
 
     if (data.ok && data.result) {
-      const maxOffset = Math.max(...data.result.map(u => u.update_id), 0);
+      const maxOffset = Math.max(...data.result.map((u) => u.update_id), 0);
       if (maxOffset > 0) {
         await setOffset(maxOffset + 1);
       }
@@ -141,7 +161,11 @@ export async function waitForReply(
   sentMessageId: number,
   timeoutMs: number,
   pollIntervalMs: number,
-  onProgress?: (message: string, progress: number, total: number) => Promise<void>
+  onProgress?: (
+    message: string,
+    progress: number,
+    total: number
+  ) => Promise<void>
 ): Promise<{ found: boolean; reply?: string }> {
   const startTime = Date.now();
 
@@ -150,11 +174,18 @@ export async function waitForReply(
     const total = Math.floor(timeoutMs / 1000);
 
     if (onProgress) {
-      await onProgress(`Waiting for reply... (${elapsed}s / ${total}s)`, elapsed, total);
+      await onProgress(
+        `Waiting for reply... (${elapsed}s / ${total}s)`,
+        elapsed,
+        total
+      );
     }
 
     const updates = await getUpdates({
-      timeout: Math.min(pollIntervalMs / MS_PER_SECOND, MAX_POLL_TIMEOUT_SECONDS),
+      timeout: Math.min(
+        pollIntervalMs / MS_PER_SECOND,
+        MAX_POLL_TIMEOUT_SECONDS
+      ),
     });
 
     for (const update of updates) {
@@ -164,16 +195,22 @@ export async function waitForReply(
     }
 
     if (Date.now() - startTime < timeoutMs) {
-      await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
     }
   }
 
   return { found: false };
 }
 
-export async function getAllReplies(): Promise<Array<{ messageId: number; replyText: string; timestamp: number }>> {
+export async function getAllReplies(): Promise<
+  Array<{ messageId: number; replyText: string; timestamp: number }>
+> {
   const updates = await getUpdates();
-  const replies: Array<{ messageId: number; replyText: string; timestamp: number }> = [];
+  const replies: Array<{
+    messageId: number;
+    replyText: string;
+    timestamp: number;
+  }> = [];
 
   for (const update of updates) {
     if (update.message?.reply_to_message) {
@@ -189,5 +226,5 @@ export async function getAllReplies(): Promise<Array<{ messageId: number; replyT
 }
 
 export async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
