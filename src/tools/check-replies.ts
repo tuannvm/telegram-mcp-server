@@ -6,12 +6,7 @@ import {
 } from '../types.js';
 import { ToolExecutionError, ValidationError } from '../errors.js';
 import { ZodError } from 'zod';
-import {
-  getReply,
-  getAllPendingReplies,
-  markReplyConsumed,
-  deleteReply,
-} from '../storage/index.js';
+import { getAllReplies, getUpdates } from '../telegram/index.js';
 
 export class CheckRepliesToolHandler {
   async execute(
@@ -22,34 +17,34 @@ export class CheckRepliesToolHandler {
       const { messageId } = CheckRepliesToolSchema.parse(args ?? {});
 
       if (messageId !== undefined) {
-        const reply = await getReply(messageId);
+        const updates = await getUpdates();
 
-        if (!reply) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `No reply found for message ID ${messageId}`,
-              },
-            ],
-          };
+        for (const update of updates) {
+          if (update.message?.reply_to_message?.message_id === messageId) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: `Reply for message ${messageId}:\n\n${update.message.text}\n\nTimestamp: ${new Date(update.message.date * 1000).toISOString()}`,
+                },
+              ],
+            };
+          }
         }
-
-        await markReplyConsumed(messageId);
 
         return {
           content: [
             {
               type: 'text',
-              text: `Reply for message ${messageId}:\n\n${reply.replyText}\n\nTimestamp: ${new Date(reply.timestamp).toISOString()}`,
+              text: `No reply found for message ID ${messageId}`,
             },
           ],
         };
       }
 
-      const allReplies = await getAllPendingReplies();
+      const replies = await getAllReplies();
 
-      if (allReplies.length === 0) {
+      if (replies.length === 0) {
         return {
           content: [
             {
@@ -60,11 +55,7 @@ export class CheckRepliesToolHandler {
         };
       }
 
-      for (const reply of allReplies) {
-        await deleteReply(reply.messageId);
-      }
-
-      const formatted = allReplies
+      const formatted = replies
         .map(
           (r) =>
             `Message ${r.messageId}:\n${r.replyText}\nTimestamp: ${new Date(r.timestamp).toISOString()}\n`
@@ -75,7 +66,7 @@ export class CheckRepliesToolHandler {
         content: [
           {
             type: 'text',
-            text: `Found ${allReplies.length} pending reply(ies):\n\n${formatted}`,
+            text: `Found ${replies.length} pending reply(ies):\n\n${formatted}`,
           },
         ],
       };
