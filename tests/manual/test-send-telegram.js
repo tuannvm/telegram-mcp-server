@@ -1,4 +1,4 @@
-import { sendMessage, waitForReply } from './dist/telegram/index.js';
+import { sendMessage, waitForReply } from '../../dist/telegram/index.js';
 
 async function test() {
   console.log('Sending test message to Telegram...');

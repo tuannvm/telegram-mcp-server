@@ -123,3 +123,31 @@ The server uses file-based offset tracking for Telegram's getUpdates API:
 - Location: `~/.telegram-mcp-state/offset.json`
 - Stores the last processed update_id + 1
 - Ensures no duplicate message processing
+
+## Bidirectional Communication Usage
+
+When sending messages that expect replies, follow this pattern:
+
+1. **Send message** using `send_and_wait` with `waitForReply=false` (non-blocking)
+2. **Poll for replies** using `check_replies` when you expect a response
+3. **Handle incoming replies** by presenting them to the user for processing
+
+**Example workflow:**
+```
+User: "Ask Telegram if deployment is approved"
+
+Claude: [Calls send_and_wait with message="Approve deployment? Reply YES or NO"]
+
+... time passes ...
+
+Claude: [Periodically calls check_replies when waiting for response]
+
+Claude: [When reply received, presents it to user and continues task]
+```
+
+**Important:** After sending a message that expects a reply, proactively check for replies using `check_replies` rather than waiting for the user to prompt you.
+
+**See also:**
+- `docs/bidirectional-communication.md` - Detailed feature guide
+- `docs/architecture.md` - Technical implementation
+- `docs/usage-examples.md` - Practical workflows
